@@ -38,9 +38,10 @@ __date__ = "2/4/13"
 
 VASP_INPUT_FILES = {"INCAR", "POSCAR", "POTCAR", "KPOINTS"}
 
-VASP_OUTPUT_FILES = ['DOSCAR', 'INCAR', 'KPOINTS', 'POSCAR', 'PROCAR',
-                     'vasprun.xml', 'CHGCAR', 'CHG', 'EIGENVAL', 'OSZICAR',
-                     'WAVECAR', 'CONTCAR', 'IBZKPT', 'OUTCAR']
+VASP_OUTPUT_FILES = ['CHG', 'CHGCAR', 'CONTCAR', 'DOSCAR', 'ELFCAR',
+                     'EIGENVAL', 'IBZKPT', 'INCAR', 'KPOINTS', 'LOCPOT',
+                     'OSZICAR', 'OUTCAR', 'POSCAR', 'PROCAR', 'vasprun.xml',
+                     'WAVECAR']
 
 VASP_NEB_INPUT_FILES = {'INCAR', 'POTCAR', 'KPOINTS'}
 
