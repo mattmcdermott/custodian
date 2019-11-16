@@ -10,7 +10,8 @@ import logging
 import numpy as np
 
 from pymatgen import Structure
-from pymatgen.io.vasp import VaspInput, Incar, Poscar, Outcar, Kpoints, Vasprun
+from pymatgen.io.vasp.inputs import VaspInput, Incar, Poscar, Kpoints
+from pymatgen.io.vasp.outputs import Vasprun, Outcar
 from monty.os.path import which
 from monty.shutil import decompress_dir
 from monty.serialization import dumpfn, loadfn
@@ -128,12 +129,21 @@ class VaspJob(Job):
         self.gamma_vasp_cmd = gamma_vasp_cmd
         self.copy_magmom = copy_magmom
         self.auto_continue = auto_continue
-        
+
         if SENTRY_DSN:
-          # if using Sentry logging, add specific VASP executable to scope
-          from sentry_sdk import configure_scope
-          with configure_scope() as scope:
-              scope.set_tag("vasp_cmd", which(vasp_cmd))
+            # if using Sentry logging, add specific VASP executable to scope
+            from sentry_sdk import configure_scope
+            with configure_scope() as scope:
+                try:
+                    if isinstance(vasp_cmd, str):
+                        vasp_path = which(vasp_cmd.split(' ')[-1])
+                    elif isinstance(vasp_cmd, list):
+                        vasp_path = which(vasp_cmd[-1])
+                    scope.set_tag("vasp_path", vasp_path)
+                    scope.set_tag("vasp_cmd", vasp_cmd)
+                except Exception:
+                    logger.error("Failed to detect VASP path: {}".format(vasp_cmd), exc_info=True)
+                    scope.set_tag("vasp_cmd", vasp_cmd)
 
     def setup(self):
         """
@@ -170,7 +180,7 @@ class VaspJob(Job):
                                 incar["NPAR"] = npar
                                 break
                     incar.write_file("INCAR")
-            except:
+            except Exception:
                 pass
 
         if self.auto_continue:
@@ -239,7 +249,7 @@ class VaspJob(Job):
                 incar = Incar.from_file("INCAR")
                 incar['MAGMOM'] = magmom
                 incar.write_file("INCAR")
-            except:
+            except Exception:
                 logger.error('MAGMOM copy from OUTCAR to INCAR failed')
 
         # Remove continuation so if a subsequent job is run in
@@ -601,7 +611,7 @@ class VaspJob(Job):
             if "vasp" in k:
                 try:
                     os.system("killall %s" % k)
-                except:
+                except Exception:
                     pass
 
 
@@ -731,7 +741,7 @@ class VaspNEBJob(Job):
                         incar["NPAR"] = npar
                         break
                 incar.write_file("INCAR")
-            except:
+            except Exception:
                 pass
 
         if self.auto_continue and \
